@@ -26,6 +26,25 @@ BigInt::BigInt()
 
 BigInt::BigInt(int b)
 {
+	long long a = b;
+	if (a == 0)
+	{
+		this->data.push_back((a % 10) + '0');
+		this->pos = true;
+		return;
+	}
+	this->pos = (a >= 0);
+	a = std::abs(a);
+
+	while (double(a) / 10)
+	{
+		this->data.push_back((a % 10) + '0');
+		a /= 10;
+	}
+};
+
+BigInt::BigInt(long long b)
+{
 	long long a = long long(b);
 	if (a == 0)
 	{
@@ -140,12 +159,14 @@ BigInt dec(std::vector<char>& A)
 			A[i] = !A[i];
 		}
 	}
+	BigInt temp(1);
 	for (int i = 0; i < A.size()-1; i++)
 	{
 		if (A[i])
 		{
-			bigint += BigInt(pow(2, i));
+			bigint += temp;
 		}
+		temp *= 2;
 	}
 	bigint.SetSign(!A[A.size() - 1]);
 	return bigint;
@@ -334,58 +355,49 @@ BigInt& BigInt::operator*=(const BigInt& other)
 
 BigInt& BigInt::operator/=(const BigInt& other)
 {
-	if (other == BigInt("0"))
-	{
+	if (other == BigInt(0)) 
 		throw std::overflow_error("Divide by zero");
-	}
-	if (this->abs() < other.abs())
+
+	if (this->abs() < other.abs()) 
 	{
 		*this = BigInt(0);
 		return *this;
 	}
-	reverse(this->data.begin(), this->data.end());
-	BigInt cnt(0);
-	BigInt A;
-	cnt.data.pop_back();
-	for (int i = 0; i < this->data.size(); i++)
+	BigInt dividend = this->abs(), divisor = other.abs(), res{};
+	long long null_amount = this->data.size() - other.data.size();
+	BigInt pow10{ 1 };
+	for (int i = 0; i < null_amount; i++)
+		pow10 *= BigInt(10);
+	while (divisor * pow10 > dividend) 
 	{
-		reverse(cnt.data.begin(), cnt.data.end());
-		cnt.data.push_back(this->data[i]);
-		reverse(cnt.data.begin(), cnt.data.end());
-		if (cnt == BigInt(0))
+		pow10.data.erase(pow10.data.begin());
+		if (pow10.data.empty()) 
+			break;
+	}
+	while (dividend >= divisor) 
+	{
+		BigInt temp;
+		for (BigInt x = 1; x <= BigInt(10); x++)
 		{
-			A.data.push_back(0 + '0');
-			cnt.data.clear();
-			continue;
-		}
-		if (cnt >= (other.abs()))
-		{
-			for (int j = 9; j >= 1; j--)
+			if (pow10 * divisor * x > dividend) 
 			{
-				BigInt B = (other.abs()) * BigInt(j);
-				if (cnt >= B)
-				{
-					A.data.push_back(j + '0');
-					cnt = (cnt - B);
-					if (cnt == BigInt(0))
-					{
-						cnt.data.pop_back();
-					}
-				}
+				temp = (x - BigInt(1)) * pow10; 
+				break;
 			}
 		}
-		else
+		dividend -= temp * divisor;
+		res += temp;
+		pow10.data.erase(pow10.data.begin());
+		if (pow10.data.empty()) 
 		{
-			A.data.push_back(0 + '0');
+			pow10.data.push_back(0); 
+			break;
 		}
 	}
-	reverse(A.data.begin(), A.data.end());
-	if ((cnt.data.size() != 0) and ((!this->pos) and (other.pos)))
-	{
-		A -= BigInt(-1);
-	}
-	this->pos = (this->GetSign() == other.GetSign());
-	this->data = A.data;
+	res.pos = (this->pos == other.pos);
+	if (!res.data[res.data.size() - 1]) 
+		res.pos = true;
+	*this = res;
 	return *this;
 };
 
@@ -401,7 +413,7 @@ BigInt& BigInt::operator^=(const BigInt& other)
 	}
 	for (int i = 0; i < vec_max->size(); i++)
 	{
-		this_bin[i] ^= other_bin[i];
+		this_bin[i] = this_bin[i] != other_bin[i];
 	}
 	*this = dec(this_bin);
 	return *this;
@@ -520,6 +532,23 @@ BigInt::operator int() const
 	for (int i = 0; i < this->data.size(); i++)
 	{
 		a += ((this->data[i] - '0')) * pow(10, i);
+	}
+	return a * (pow((-1), (!this->pos)));
+};
+
+BigInt::operator long long() const
+{
+	if ((*this > BigInt(INT_MAX)) or (*this < BigInt(INT_MIN)))
+	{
+		throw std::out_of_range("The number " + std::string(*this) + " is out of range int.\n");
+	}
+
+	long long a = 0;
+	long long temp = 1;
+	for (int i = 0; i < this->data.size(); i++)
+	{
+		a += ((this->data[i] - '0')) * temp;
+		temp *= 10;
 	}
 	return a * (pow((-1), (!this->pos)));
 };

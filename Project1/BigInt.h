@@ -16,6 +16,7 @@ public:
 	void SetSign(bool A);
 	BigInt();
 	BigInt(int);
+	BigInt(long long);
 	BigInt(std::string);
 	BigInt(const BigInt&);
 	~BigInt();
