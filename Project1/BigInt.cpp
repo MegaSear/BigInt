@@ -572,7 +572,7 @@ BigInt operator/(const BigInt& A, const BigInt& B)
 BigInt operator^(const BigInt& A, const BigInt& B)
 {
 	BigInt a = A;
-	return a /= B;
+	return a ^= B;
 };
 
 BigInt operator%(const BigInt& A, const BigInt& B)
