@@ -401,7 +401,7 @@ BigInt& BigInt::operator^=(const BigInt& other)
 	}
 	for (int i = 0; i < vec_max->size(); i++)
 	{
-		this_bin[i] |= other_bin[i];
+		this_bin[i] ^= other_bin[i];
 	}
 	*this = dec(this_bin);
 	return *this;
